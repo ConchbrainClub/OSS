@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
+    "deploy": "wrangler deploy -c wrangler.prod.toml",
+    "dev": "rm -rf .wrangler && wrangler dev",
     "start": "wrangler dev",
+    "clear": "rm -rf .wrangler",
     "test": "vitest"
   },
   "devDependencies": {
