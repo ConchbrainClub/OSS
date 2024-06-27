@@ -14,51 +14,28 @@ export default {
 
 		console.log(`${request.method} object ${objectName}: ${request.url}`)
 
-		if (request.method === 'GET' || request.method === 'HEAD') {
-			if (!objectName) {
-				if (request.method == 'HEAD') {
-					return new Response(undefined, { status: 400 })
-				}
-
-				const options = {
-					prefix: url.searchParams.get('prefix') ?? undefined,
-					delimiter: url.searchParams.get('delimiter') ?? undefined,
-					cursor: url.searchParams.get('cursor') ?? undefined,
-					include: ['customMetadata', 'httpMetadata'],
-				}
-				console.log(JSON.stringify(options))
-
-				const listing = await env.BUCKET.list(options)
-				return new Response(JSON.stringify(listing), {
-					headers: {
-						'content-type': 'application/json; charset=UTF-8',
-					}
-				})
+		if (!objectName) {
+			if (request.method == 'HEAD') {
+				return new Response(undefined, { status: 400 })
 			}
 
-			if (request.method === 'GET') {
-				const object = await env.BUCKET.get(objectName, {
-					range: request.headers,
-					onlyIf: request.headers,
-				})
-
-				if (object === null) {
-					return objectNotFound(objectName)
-				}
-
-				const headers = new Headers()
-				object.writeHttpMetadata(headers)
-				headers.set('etag', object.httpEtag)
-				if (object.range) {
-					headers.set("content-range", `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`)
-				}
-				const status = object.body ? (request.headers.get("range") !== null ? 206 : 200) : 304
-				return new Response(object.body, {
-					headers,
-					status
-				})
+			const options = {
+				prefix: url.searchParams.get('prefix') ?? undefined,
+				delimiter: url.searchParams.get('delimiter') ?? undefined,
+				cursor: url.searchParams.get('cursor') ?? undefined,
+				include: ['customMetadata', 'httpMetadata'],
 			}
+			console.log(JSON.stringify(options))
 
+			const listing = await env.BUCKET.list(options)
+			return new Response(JSON.stringify(listing), {
+				headers: {
+					'content-type': 'application/json; charset=UTF-8',
+				}
+			})
+		}
+
+		if (request.method === 'HEAD') {
 			const object = await env.BUCKET.head(objectName)
 
 			if (object === null) {
@@ -72,11 +49,29 @@ export default {
 				headers,
 			})
 		}
-		if (request.method === 'PUT' || request.method == 'POST') {
-			if (!objectName) {
-				return new Response('bad request', { status: 400 })
+		if (request.method === 'GET') {
+			const object = await env.BUCKET.get(objectName, {
+				range: request.headers,
+				onlyIf: request.headers,
+			})
+
+			if (object === null) {
+				return objectNotFound(objectName)
 			}
 
+			const headers = new Headers()
+			object.writeHttpMetadata(headers)
+			headers.set('etag', object.httpEtag)
+			if (object.range) {
+				headers.set("content-range", `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`)
+			}
+			const status = object.body ? (request.headers.get("range") !== null ? 206 : 200) : 304
+			return new Response(object.body, {
+				headers,
+				status
+			})
+		}
+		if (request.method === 'PUT' || request.method == 'POST') {
 			const object = await env.BUCKET.put(objectName, request.body, {
 				httpMetadata: request.headers,
 			})
