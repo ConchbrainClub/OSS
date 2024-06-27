@@ -29,7 +29,7 @@ export default {
 
 			let headers = new Headers()
 			object.writeHttpMetadata(headers)
-			headers.set('etag', object.httpEtag)
+			headers.set('Etag', object.httpEtag)
 			return new Response(null, { headers })
 		}
 
@@ -42,9 +42,12 @@ export default {
 
 			let headers = new Headers()
 			object.writeHttpMetadata(headers)
-			headers.set('etag', object.httpEtag)
+			headers.set('Content-Type', 'application/octet-stream')
+			headers.set('Content-Disposition', `attachment; filename=${object.key}`)
+			headers.set('Content-Length', object.size)
+			headers.set('Etag', object.httpEtag)
 			if (object.range) {
-				headers.set("content-range", `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`)
+				headers.set("Content-Range", `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`)
 			}
 
 			let status = object.body ? (request.headers.get("range") !== null ? 206 : 200) : 304
@@ -56,7 +59,7 @@ export default {
 				httpMetadata: request.headers,
 			})
 
-			return new Response(null, { headers: { 'etag': object.httpEtag } })
+			return new Response(null, { headers: { 'Etag': object.httpEtag } })
 		}
 
 		if (request.method == 'DELETE') {
