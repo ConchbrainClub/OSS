@@ -25,13 +25,17 @@ export default {
 			return new Response(JSON.stringify(listing), { headers })
 		}
 
+		if (request.method == 'OPTIONS') {
+			return new Response('ok', { headers })
+		}
+
 		if (request.method == 'HEAD') {
 			let object = await env.BUCKET.head(objectName)
 			if (!object) return new Response(`object ${objectName} is not found`, { status: 404 })
 
 			object.writeHttpMetadata(headers)
 			headers.set('Etag', object.httpEtag)
-			return new Response(null, { headers })
+			return new Response(objectName, { headers })
 		}
 
 		if (request.method == 'GET') {
@@ -50,7 +54,7 @@ export default {
 				headers.set("Content-Range", `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`)
 			}
 
-			let status = object.body ? (request.headers.get("range") !== null ? 206 : 200) : 304
+			let status = object.body ? (request.headers.get("range") ? 206 : 200) : 304
 			return new Response(object.body, { headers, status })
 		}
 
@@ -60,7 +64,7 @@ export default {
 			})
 
 			headers.set('Etag', object.httpEtag)
-			return new Response(null, { headers })
+			return new Response(objectName, { headers })
 		}
 
 		if (request.method == 'DELETE') {
