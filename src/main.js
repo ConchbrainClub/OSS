@@ -1,5 +1,10 @@
 export default {
 	async fetch(request, env) {
+		let headers = new Headers()
+		headers.set('Access-Control-Allow-Origin', '*')
+		headers.set('Access-Control-Allow-Methods', '*')
+		headers.set('Access-Control-Allow-Headers', '*')
+
 		let url = new URL(request.url)
 		let objectName = url.pathname.slice(1)
 
@@ -16,18 +21,14 @@ export default {
 			console.log(JSON.stringify(options))
 
 			let listing = await env.BUCKET.list(options)
-			return new Response(JSON.stringify(listing), {
-				headers: {
-					'content-type': 'application/json; charset=UTF-8',
-				}
-			})
+			headers.set('content-type', 'application/json; charset=UTF-8')
+			return new Response(JSON.stringify(listing), { headers })
 		}
 
 		if (request.method == 'HEAD') {
 			let object = await env.BUCKET.head(objectName)
 			if (!object) return new Response(`object ${objectName} is not found`, { status: 404 })
 
-			let headers = new Headers()
 			object.writeHttpMetadata(headers)
 			headers.set('Etag', object.httpEtag)
 			return new Response(null, { headers })
@@ -40,7 +41,6 @@ export default {
 			})
 			if (!object) return new Response(`object ${objectName} is not found`, { status: 404 })
 
-			let headers = new Headers()
 			object.writeHttpMetadata(headers)
 			headers.set('Content-Type', 'application/octet-stream')
 			headers.set('Content-Disposition', `attachment; filename=${object.key}`)
@@ -59,12 +59,13 @@ export default {
 				httpMetadata: request.headers,
 			})
 
-			return new Response(null, { headers: { 'Etag': object.httpEtag } })
+			headers.set('Etag', object.httpEtag)
+			return new Response(null, { headers })
 		}
 
 		if (request.method == 'DELETE') {
 			await env.BUCKET.delete(objectName)
-			return new Response()
+			return new Response('deleted', { headers })
 		}
 
 		return new Response(`Unsupported method`, { status: 400 })
