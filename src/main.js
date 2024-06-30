@@ -73,5 +73,21 @@ export default {
 		}
 
 		return new Response(`Unsupported method`, { status: 400 })
+	},
+
+	async scheduled(event, env, ctx) {
+		let now = new Date()
+
+		let listing = await env.BUCKET.list({
+			include: ['customMetadata', 'httpMetadata']
+		})
+
+		for (let object of listing.objects) {	
+			let uploaded = new Date(object.uploaded)
+			let expires = new Date(uploaded.getTime() + 24 * 60 * 60 * 1000)
+
+			if (now < expires) return
+			await env.BUCKET.delete(object.key)
+		}
 	}
 }
