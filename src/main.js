@@ -11,8 +11,22 @@ export default {
 		console.log(`${request.method} object ${objectName}: ${request.url}`)
 
 		if (!objectName) {
+			let prefix = url.searchParams.get('prefix')
+
+			if (!prefix) {
+				return new Response(`
+					<div style="text-align:center; margin-top: 100px;">
+						<p>Welcome to ConchBrain OSS</p>
+						<p>Please visit <a href="https://www.conchbrain.club/" target="_blank">here</a> to use</p>
+					</div>
+				`, {
+					status: 200,
+					headers: { 'Content-Type': 'text/html charset=utf-8' }
+				})
+			}
+
 			let options = {
-				prefix: url.searchParams.get('prefix') ?? undefined,
+				prefix,
 				delimiter: url.searchParams.get('delimiter') ?? undefined,
 				cursor: url.searchParams.get('cursor') ?? undefined,
 				include: ['customMetadata', 'httpMetadata'],
