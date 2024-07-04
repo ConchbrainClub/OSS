@@ -61,7 +61,7 @@ export default {
 
 			object.writeHttpMetadata(headers)
 			headers.set('Content-Type', 'application/octet-stream')
-			headers.set('Content-Disposition', `attachment; filename=${object.key}`)
+			headers.set('Content-Disposition', `attachment; filename=${object.key.split('/').at(-1)}`)
 			headers.set('Content-Length', object.size)
 			headers.set('Etag', object.httpEtag)
 			if (object.range) {
