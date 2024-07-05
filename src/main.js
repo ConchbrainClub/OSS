@@ -59,15 +59,7 @@ export default {
 			})
 			if (!object) return new Response(`object ${objectName} is not found`, { status: 404 })
 
-			object.writeHttpMetadata(headers)
-			headers.set('Content-Type', 'application/octet-stream')
-			headers.set('Content-Disposition', `attachment; filename=${object.key.split('/').at(-1)}`)
-			headers.set('Content-Length', object.size)
-			headers.set('Etag', object.httpEtag)
-			if (object.range) {
-				headers.set("Content-Range", `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`)
-			}
-
+			this.genHeader(headers, object, Boolean(url.searchParams.get('attachment')))
 			let status = object.body ? (request.headers.get("range") ? 206 : 200) : 304
 			return new Response(object.body, { headers, status })
 		}
@@ -102,6 +94,51 @@ export default {
 
 			if (now < expires) return
 			await env.BUCKET.delete(object.key)
+		}
+	},
+
+	async genHeader(headers, object, attachment = false) {
+		let fileName = object.key.split('/').at(-1)
+		let extName = fileName.substring(fileName.lastIndexOf('.') + 1)
+
+		switch (true) {
+			case fileName.endsWith('.html'):
+				headers.set('Content-Type', 'text/html; charset=utf-8')
+				break
+
+			case fileName.endsWith('.txt'):
+				headers.set('Content-Type', 'text/plain; charset=utf-8')
+				break
+
+			case fileName.endsWith('.js'):
+				headers.set('Content-Type', 'text/javascript; charset=utf-8')
+				break
+
+			case fileName.endsWith('.css'):
+				headers.set('Content-Type', 'text/css; charset=utf-8')
+				break
+
+			case fileName.endsWith('.jpg'):
+			case fileName.endsWith('.jpeg'):
+			case fileName.endsWith('.png'):
+			case fileName.endsWith('.svg'):
+				headers.set('Content-Type', `image/${extName}`)
+				break
+
+			default:
+				headers.set('Content-Type', 'application/octet-stream')
+				break
+		}
+
+		headers.set('Content-Length', object.size)
+		headers.set('Etag', object.httpEtag)
+
+		if (attachment) {
+			headers.set('Content-Disposition', `attachment; filename=${fileName}`)
+		}
+
+		if (object.range) {
+			headers.set("Content-Range", `bytes ${object.range.offset}-${object.range.end ?? object.size - 1}/${object.size}`)
 		}
 	}
 }
