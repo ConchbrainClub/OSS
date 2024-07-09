@@ -82,16 +82,14 @@ export default {
 	},
 
 	async scheduled(event, env, ctx) {
-		let now = new Date()
+		let now = Date.now()
 
 		let listing = await env.BUCKET.list({
 			include: ['customMetadata', 'httpMetadata']
 		})
 
 		for (let object of listing.objects) {	
-			let uploaded = new Date(object.uploaded)
-			let expires = new Date(uploaded.getTime() + 24 * 60 * 60 * 1000)
-
+			let expires = Date.parse(object.uploaded) + 24 * 60 * 60 * 1000
 			if (now < expires) return
 			await env.BUCKET.delete(object.key)
 		}
