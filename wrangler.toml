@@ -9,3 +9,6 @@ crons = ["0 */6 * * *"]
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "storage"
+
+[vars]
+SCHEDULED = 24

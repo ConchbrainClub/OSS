@@ -1,17 +1,15 @@
 {
   "name": "oss",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
-    "deploy": "wrangler deploy -c wrangler.prod.toml",
+    "deploy": "wrangler deploy -c wrangler.toml",
     "dev": "rm -rf .wrangler && wrangler dev",
     "start": "wrangler dev",
-    "clear": "rm -rf .wrangler",
-    "test": "vitest"
+    "clear": "rm -rf .wrangler"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.4.5",
-    "wrangler": "^3.60.3",
-    "vitest": "1.5.0"
+    "wrangler": "^3.71.0"
   }
 }
