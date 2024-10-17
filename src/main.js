@@ -90,7 +90,7 @@ export default {
 
 		for (let object of listing.objects) {	
 			let expires = Date.parse(object.uploaded) + env.SCHEDULED * 60 * 60 * 1000
-			if (now < expires) return
+			if (now < expires || object.key.startsWith(env.IGNORE)) return
 			await env.BUCKET.delete(object.key)
 		}
 	},
